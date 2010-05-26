@@ -46,6 +46,17 @@ sub _raw_parse_simple_selector {
         }
       };
 
+    # '[attr=bar]' - match misc. attributes
+    /\G\[$sel_re=$sel_re\]/gc and
+      return do {
+          my $attribute = $1;
+          my $value = $2;
+          sub{
+              $_[0]->{attrs}{$attribute}
+              && $_[0]->{attrs}{$attribute} eq $value;
+          }
+      };
+
     confess "Couldn't parse $_ as starting with simple selector";
   }
 }
