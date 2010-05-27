@@ -133,7 +133,7 @@ sub parse_selector {
       last PARSE if( pos == length );
       /\G\s*,\s*/gc or do {
         /\G(.*)/;
-        confess "Selectors not comma separated: $sel. Fell apart at: $1";
+        $self->_blam( "Selectors not comma separated." );
       }
 
      } until (pos == length) };
@@ -144,6 +144,15 @@ sub parse_selector {
       }
     };
   }
+}
+
+
+sub _blam {
+  my ($self, $error) = @_;
+  my $hat = (' ' x (pos||0)).'^';
+  die "Error parsing dispatch specification: ${error}\n
+${_}
+${hat} here\n";
 }
 
 1;
