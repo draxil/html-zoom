@@ -71,7 +71,25 @@ sub parse_selector {
     PARSE: { do {
       push(@sub, $self->_raw_parse_simple_selector($_));
       last PARSE if (pos == length);
-      /\G\s*,\s*/gc or confess "Selectors not comma separated";
+      if( ! /\G\s*,\s*/gc ){
+          # not a new selector so chaining:
+          my @chain = pop @sub;
+          # slurp all chain selectors until we hit a , or the end:
+          CHAIN: { do{
+                push @chain, $self->_raw_parse_simple_selector($_);
+                last CHAIN if ( /\G\s*,\s*/gc )
+          } until( pos == length ) };
+
+          push @sub, sub{
+              my $r;
+              for my $inner ( @chain ){
+                  if( ! ($r = $inner->( @_ )) ){
+                      return $r;
+                  }
+              }
+              return $r;
+          }
+      }
     } until (pos == length) };
     return $sub[0] if (@sub == 1);
     return sub {
